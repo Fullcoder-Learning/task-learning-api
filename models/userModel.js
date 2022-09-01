@@ -9,7 +9,7 @@ const UserSchema = Schema({
     lastname: {
         type: String,
         require: false 
-    }, // email y password serán obligatorios:
+    }, 
     email: {
         type: String,
         require: true,
@@ -18,6 +18,10 @@ const UserSchema = Schema({
     password: {
         type: String,
         require: true 
+    },
+    avatar: { // el avatar será de tipo string ya que solo guardamos el nombre del archivo
+        type: String,
+        require: false
     }
 });
 

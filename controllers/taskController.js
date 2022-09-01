@@ -87,6 +87,8 @@ async function putTask(req, res){
                     Task.findByIdAndUpdate(taskId, taskData, (err, result)=>{
                         if(err){
                             res.status(404).send({msg: err});
+                        }else if(!result){
+                            res.status(404).send({msg: "Error: task doesn't exists"});
                         }else if(taskData.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
                             res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
                         }else{
@@ -121,6 +123,8 @@ async function deleteTask(req, res){
                     Task.findByIdAndDelete(taskId, (err, result) => {
                         if(err){
                             res.status(500).send({msg: "Server status error"});
+                        }else if(!result){
+                            res.status(404).send({msg: "Error: task doesn't exists"});
                         }else{
                             res.status(200).send({msg: "Task successfully deleted"});
                         }
@@ -158,6 +162,8 @@ async function changeTask(req, res){
                     Task.findByIdAndUpdate(taskId, taskData, (err, result)=>{
                         if(err){
                             res.status(404).send({msg: err});
+                        }else if(!result){
+                            res.status(404).send({msg: "Error: task doesn't exists"});
                         }else if(taskData.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
                             res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
                         }else{
