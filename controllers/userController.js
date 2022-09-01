@@ -1,6 +1,8 @@
 const bcryptjs = require('bcryptjs');
+const nodemailer = require('nodemailer');
+// importar momentjs:
+const moment = require('moment');
 const User = require('../models/userModel');
-// importar servicio jwt:
 const jwt = require('../services/jwtService');
 
 async function postUser(req, res){
@@ -25,31 +27,23 @@ async function postUser(req, res){
     }
 }
 
- // crear función para hacer login:
  async function login(req, res){
-    // recuperar el email y password del body:
     const {email, password} = req.body;
 
     try {
-        // buscamos si existe el usuario por su email haciendo un callback asincrono:
         User.findOne({email: email}, async (err, userData) =>{
-            // si el usuario no existe se lanza un mensaje de error:
             if(err){
                 res.status(500).send({msg: "Server status error"});
             }else{
                 if(!userData){
                     res.status(400).send({msg: "Error: email doesn't exists"});
                 }else{
-                    // comprobar la contraseña recibida con la contraseña encriptada:
                     const passwordCorrect = await bcryptjs.compare(password, userData.password);
-                    // si la contraseña no es correcta avisar:
                     if(!passwordCorrect){
                         res.status(403).send({msg: "Error: incorrect password"});
                     }else{
-                        // creamos el token que lleva el usuario la fecha de expiración del token (12 horas):
                         token =  await jwt.createToken(userData, "24h");
 
-                        // se responde con  el token: 
                         res.status(200).send({token: token});
                     }
 
@@ -57,16 +51,88 @@ async function postUser(req, res){
             }
         });
 
-        
-
-
     }catch(error){
         req.status(500).send(error);
     }
 
 }
 
+function forgot(req, res){
+    const email = req.body.email;
+    if(!email)throw{msg: "Error: email cannot be null"}
+
+    try{
+        User.findOne({email: email}, async (err, userData)=>{
+            if(err){
+                res.status(400).send({msg: "Error: email doesn't exists"});
+            }else{
+                token =  await jwt.createToken(userData, "1h");
+
+                const transporter = nodemailer.createTransport({
+                    host: process.env.EMAIL_HOST, 
+                    port: 2525,
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASS
+                    }
+                });
+
+
+                const mailOptions = { 
+                    from: 'pytonicus@gmail.com',
+                    to: userData.email,
+                    subject: 'Reestablecer contraseña | Task Learn',
+                    text: `http://localhost:3000/api/reset/${userData._id}/${token}`
+                };
+
+                transporter.sendMail(mailOptions, (err, response)=>{
+                    if(err){
+                        res.status(500).send({msg: "Server status error"});
+                    }else{
+                        res.status(200).send({msg: "Email has send"});
+                    }
+                });
+            }
+        });
+    }catch(error){
+        req.status(500).send(error);
+    }
+}
+
+async function resetPassword(req, res){
+    // recuperar el id y token de usuario:
+    const {id, token} = req.params;
+    // recuperamos la contraseña por partida doble:
+    const {newPassword, repitePassword} = req.body;
+
+    // decodificar token:
+    const user_token = jwt.decodeToken(token, process.env.SECRET_KEY);
+
+
+    // comprobar si las contraseñas son diferentes o el token ha caducado o el id son distintos:
+    if(user_token.exp <= moment().unix()){
+        res.status(400).send({msg: "Error: token has expired"});
+    }else if(user_token.id !== id || newPassword !== repitePassword){
+        res.status(403).send({msg: "Error: unauthorized request"});
+    }else{
+        // codificar contraseña:
+        const salt = bcryptjs.genSaltSync(10);
+        const password = await bcryptjs.hash(newPassword, salt);
+        // actualizar contraseña nueva:
+        User.findByIdAndUpdate(id, {password: password}, (err, result) =>{
+            if(err){
+                res.status(500).send({msg: "Server status error"});
+            }else{
+                res.status(200).send({msg: "Password change successfully"});
+            }
+        });
+    }
+
+}
+
 module.exports = {
     postUser,
-    login // exportar modulo
+    login,
+    forgot,
+    resetPassword // exportar modulo
 }

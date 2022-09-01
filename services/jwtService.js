@@ -1,9 +1,6 @@
 // importar jwt:
 const jwt = require("jsonwebtoken");
 
-// crear la clave secreta (escribe algo aleatorio):
-const SECRET_KEY = "2ha9df238dhha87d8vaq";
-
 // crear token:
 function createToken(user, expiresIn){
     // recuperamos el id y el email del objeto user:
@@ -12,12 +9,12 @@ function createToken(user, expiresIn){
     const payload = {id, email}
 
     // utilizamos el payload para retornar el token tras iniciar sesión:
-    return jwt.sign(payload, SECRET_KEY, {expiresIn: expiresIn});
+    return jwt.sign(payload, process.env.SECRET_KEY, {expiresIn: expiresIn});
 }
 
 // crear uan función para decodificar el token:
 function decodeToken(token){
-    return jwt.decode(token, SECRET_KEY);
+    return jwt.decode(token, process.env.SECRET_KEY);
 }
 
 // exportar las dos funciones para crear y decodificar token:
