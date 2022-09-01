@@ -1,11 +1,18 @@
 const Task = require('../models/taskModel');
+// cargar middleware authMiddleware:
+const authMiddleware = require('../middlewares/authMiddleware');
 
 async function postTask(req, res){
+    // recuperar usuario actual a través del token:
+    const user = await authMiddleware.getUser(req, res);
+
     const task = new Task();
     const params = req.body;
 
     task.name = params.name;
     task.description = params.description;
+    // añadir el owner:
+    task.owner = user.id;
 
     try{
         const taskStore = await task.save();
@@ -21,8 +28,11 @@ async function postTask(req, res){
 }
 
 async function getTasks(req, res){
+    // recuperar usuario actual a través del token:
+    const user = await authMiddleware.getUser(req, res);
+
     try{
-        const tasks = await Task.find().sort({create_at: -1}); 
+        const tasks = await Task.find({owner: user.id}).sort({create_at: -1}); 
 
         if(!tasks){
             res.status(400).send({msg: "Error: Cannot get tasks"});
@@ -36,12 +46,16 @@ async function getTasks(req, res){
 
 async function getTask(req, res){
     const taskId = req.params.id;
+    // recuperar usuario actual a través del token:
+    const user = await authMiddleware.getUser(req, res);
 
     try{
         const task = await Task.findById(taskId);
 
         if(!task){
             res.status(400).send({msg: "Error: Task doesn't exists"});
+        }else if(task.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
+            res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
         }else{
             res.status(200).send(task);
         }
@@ -50,9 +64,12 @@ async function getTask(req, res){
     }
 }
 
- function putTask(req, res){
+// convertir esta función en asincrona para el middleware:
+async function putTask(req, res){
     const taskId = req.params.id;
     const params = req.body;
+    // recuperar usuario actual a través del token:
+    const user = await authMiddleware.getUser(req, res);
 
     try{
         Task.findById(taskId, (err, taskData)=>{
@@ -70,6 +87,10 @@ async function getTask(req, res){
                     Task.findByIdAndUpdate(taskId, taskData, (err, result)=>{
                         if(err){
                             res.status(404).send({msg: err});
+                        }else if(!result){
+                            res.status(404).send({msg: "Error: task doesn't exists"});
+                        }else if(taskData.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
+                            res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
                         }else{
                             res.status(201).send({task: taskData});
                         }
@@ -85,27 +106,47 @@ async function getTask(req, res){
 
 async function deleteTask(req, res){
     const taskId = req.params.id;
+    // recuperar usuario actual a través del token:
+    const user = await authMiddleware.getUser(req, res);
 
     try{
-        const task = await Task.findByIdAndDelete(taskId); 
+        // mejorar la seguridad a la hora de eliminar con un callback:
+        Task.findById(taskId, (err, taskData)=>{
+            if(err){
+                res.status(500).send({msg: "Server status error"});
+            }else{
+                if(!taskData){
+                    res.status(400).send({msg: "Error: Task doesn't exists"});
+                }else if(taskData.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
+                    res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
+                }else{
+                    Task.findByIdAndDelete(taskId, (err, result) => {
+                        if(err){
+                            res.status(500).send({msg: "Server status error"});
+                        }else if(!result){
+                            res.status(404).send({msg: "Error: task doesn't exists"});
+                        }else{
+                            res.status(200).send({msg: "Task successfully deleted"});
+                        }
+                    }); 
+                    
+                }
+            }
+        }); 
 
-        if(!task){
-            res.status(400).send({msg: "Error: Task doesn't exists"});
-        }else{
-            res.status(200).send({msg: "Task successfully deleted"});
-        }
+        
     }catch(error){
         res.status(500).send(error);
     }
 }
 
-// cambiar estado de tarea:
-function changeTask(req, res){
-    // recuperar id de la tarea:
+// convertir esta función en asíncrona:
+async function changeTask(req, res){
     const taskId = req.params.id;
+    // recuperar usuario actual a través del token:
+    const user = await authMiddleware.getUser(req, res);
 
     try{
-        // buscar tarea a modificar y ejecutar callback:
         Task.findById(taskId, (err, taskData)=>{
 
             if(err){
@@ -113,14 +154,18 @@ function changeTask(req, res){
             }else{
                 if(!taskData){
                     res.status(400).send({msg: "Error: Task doesn't exists"});
+                }else if(taskData.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
+                    res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
                 }else{
-                    // si existe la tarea cambiar campos is_complete y date_finish
                     taskData.is_complete = true;
                     taskData.date_finish = Date.now();
-                    // realizar cambios: 
                     Task.findByIdAndUpdate(taskId, taskData, (err, result)=>{
                         if(err){
                             res.status(404).send({msg: err});
+                        }else if(!result){
+                            res.status(404).send({msg: "Error: task doesn't exists"});
+                        }else if(taskData.owner != user.id){ // añadir validación para comprobar que somos el propietario sino dará 403:
+                            res.status(403).send({msg: "Forbidden - Access to this resource on the server is denied!"});
                         }else{
                             res.status(201).send({task: taskData});
                         }

@@ -1,33 +1,37 @@
 // se importa mongoose para mongodb y se inicializa el modulo schema para hacer un modelo:
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+// importar el tipo ObjectId para trabajar con ids
+const ObjectId = Schema.ObjectId;
 
-// se crea un schema del modelo:
-const TaskSchema = Schema({ // todos los campos van a ser requeridos (require: true)
-    name: { // se crea un título de tipo cadena
+const TaskSchema = Schema({ 
+    name: { 
         type: String,
         require: true
     },
-    description: { // del mismo modo se crea la descripción
+    description: { 
         type: String,
         require: true
     },
-    is_complete: { // se crea un campo para verificar si se ha completado
+    is_complete: { 
         type: Boolean,
         require: true,
-        default: false // por defecto se asignará el valor false
+        default: false
     },
-    date_created: { // se crea un campo para la fecha de creación
+    date_created: { 
         type: Date,
         require: true,
-        default: Date.now // por defecto llevará la fecha de creación en el momento
+        default: Date.now
     },
-    date_finish: { // este campo define la fecha de finalización
+    date_finish: { 
         type: Date,
         require: true,
-        default: null // por defecto irá en nulo.
+        default: null 
+    },
+    owner: { // crear el campo propietario y hacerlo de tipo ObjectId:
+        type: ObjectId,
+        require: true,
     }
 });
 
-// se exporta el modelo añadiendo el nombre de la colección de MongoDB y el Schema:
 module.exports = mongoose.model("tasks", TaskSchema);
