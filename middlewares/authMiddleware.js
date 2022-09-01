@@ -1,7 +1,6 @@
 const moment = require('moment');
 const jwt = require('../services/jwtService');
 
-const SECRET_KEY = "2ha9df238dhha87d8vaq";
 
 function secureRoute(req, res, next){
     if(!req.headers.authorization){
@@ -11,7 +10,7 @@ function secureRoute(req, res, next){
     const token = req.headers.authorization.replace(/['"]+/g, ""); // reemplazar las comillas simples por nada
 
     try {
-        const payload = jwt.decodeToken(token, SECRET_KEY);
+        const payload = jwt.decodeToken(token, process.env.SECRET_KEY);
 
         if(payload.exp <= moment().unix()){
             return res.status(400).send({msg: "Error: token has expired"});
@@ -28,8 +27,11 @@ function secureRoute(req, res, next){
 function getUser(req, res){
     // recuperar token:
     const token = req.headers.authorization.replace(/['"]+/g, "");
+
+    // comprobar si el token ha caducado:
+    
     // decodificar token:
-    const payload = jwt.decodeToken(token, SECRET_KEY);
+    const payload = jwt.decodeToken(token, process.env.SECRET_KEY);
     // retornar el payload:
     return payload;
 }
