@@ -10,9 +10,9 @@ api.post("/register", userController.postUser);
 api.post("/login", userController.login);
 api.post("/forgot", userController.forgot);
 api.put("/reset/:id/:token", userController.resetPassword);
-api.get("/users/:id", [authMiddleware.secureRoute], userController.getUser);
+api.get("/users", [authMiddleware.secureRoute], userController.getUser);
 api.put("/users/:id", [authMiddleware.secureRoute, uploadAvatarMiddleware], userController.putUser);
-api.get("/users/avatar/:avatarName", [authMiddleware.secureRoute], userController.getAvatar);
+api.get("/users/avatar/:avatarName", userController.getAvatar);
 // ruta para eliminar usuarios:
 api.delete("/users/:id", [authMiddleware.secureRoute], userController.deleteUser);
 
