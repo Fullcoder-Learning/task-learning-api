@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 // cargar dotenv: 
 const dotenv = require('dotenv');
 const app = require('./app');
-const port = 3000;
+const port = 5000;
 
 // ejecutar variables de entorno:
 dotenv.config()

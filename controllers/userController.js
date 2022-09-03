@@ -88,7 +88,7 @@ function forgot(req, res){
                     from: 'pytonicus@gmail.com',
                     to: userData.email,
                     subject: 'Reestablecer contraseña | Task Learn',
-                    text: `http://localhost:3000/api/reset/${userData.id}/${token}`
+                    text: `http://localhost:3000/reset/${userData.id}/${token}` // ruta del frontend
                 };
 
                 transporter.sendMail(mailOptions, (err, response)=>{
@@ -133,11 +133,10 @@ async function resetPassword(req, res){
 }
 
 async function getUser(req, res){
-    const userId = req.params.id;
     const user_token = await authMiddleware.getUser(req, res);
 
     try{
-        const user = await User.findById(userId);
+        const user = await User.findById(user_token.id);
 
         if(!user){
             res.status(400).send({msg: "Error: user doesn't exists"});
@@ -172,7 +171,10 @@ async function putUser(req, res){
                     userData.name = params.name;
                     userData.lastname = params.lastname;
                     userData.email = params.email; 
-                    userData.password = await bcryptjs.hash(params.password, salt);
+                    
+                    if(params.password){
+                        userData.password = await bcryptjs.hash(params.password, salt);
+                    }
 
                     if(req.files.avatar){
                         const filePath = req.files.avatar.path;
