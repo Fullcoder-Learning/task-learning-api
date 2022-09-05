@@ -3,11 +3,10 @@ const nodemailer = require('nodemailer');
 const moment = require('moment');
 const path = require('path');
 const fs = require('fs');
-// importar has de underscore para comprobar que existe una clave en un objeto:
-const {has} = require('underscore');
-const {_} = require('underscore');
 
 const User = require('../models/userModel');
+// importar modelo tareas:
+const Task = require('../models/taskModel');
 const jwt = require('../services/jwtService');
 const authMiddleware = require('../middlewares/authMiddleware');
 
@@ -263,6 +262,18 @@ async function deleteUser(req, res){
                                 if (err) throw console.error(err);
                             });
                         }
+
+                        // recorrer tareas e ir borrandolas:
+                        Task.deleteMany({owner: userId}, (err, taskData)=>{
+                            if(err){
+                                console.log("Server status error");
+                            }else if(!taskData){
+                                console.log("No tasks to remove");
+                            }else{
+                                console.log("tasks has removed");
+                            }
+                        });
+
                         res.status(200).send({msg: "User delete successfully"});
                     }
                 });
