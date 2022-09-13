@@ -1,0 +1,15 @@
+{   
+    "plugins": [],
+    "source": {
+        "include": [""],
+        "includePattern": ".js$",
+        "excludePattern": "(node_modules|uploads|documents)"
+    },
+    "templates": {
+        "cleverLinks": false,
+        "monospaceLinks": false
+    },
+    "opts": {
+        "destination": "./documents"
+    }
+}
