@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
-// cargar dotenv: 
 const dotenv = require('dotenv');
 const app = require('./app');
-const port = 5000;
 
-// ejecutar variables de entorno:
 dotenv.config()
 
+// movemos despues del dotenv.config los datos de port y host para recuperarlos del .env
+const port = process.env.PORT || 5000;
+const host = process.env.HOST_URL || `http://localhost:${port}`; // le pasamos un puerto por las variables de entorno
 
-mongoose.connect("mongodb://localhost:27017/task-learn", (err, res) =>{
-    try{
+mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.die77rr.mongodb.net/?retryWrites=true&w=majority`, (err, res) =>{
+    try{                       
         if(err){
             throw err;
         }else{
@@ -21,5 +21,5 @@ mongoose.connect("mongodb://localhost:27017/task-learn", (err, res) =>{
 });
 
 app.listen(port, () => {
-    console.log(`Servidor funcionando en: http://localhost:${port}`);
+    console.log(`Servidor funcionando en: ${host}`);
 });
