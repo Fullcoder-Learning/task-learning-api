@@ -13,8 +13,8 @@ const swaggerOptions = {
             version: "1.0.0"
         },
         servers: [
-            {
-                url: "http://localhost:5000"
+            {   // para que la docu funcione cambiamos este campo añadiendo la variable de entorno con la url del host:
+                url: process.env.HOST_URL || "http://localhost:5000"
             }
         ],
         components: {
